@@ -7,6 +7,7 @@ import filesRouter from './routes/files';
 import modelRouter from './routes/model';
 import agentRouter from './routes/agent';
 import gitRouter from './routes/git';
+import completionRouter from './routes/completion';
 import { initWebSocketServer } from './websocket/wsServer';
 
 const app = express();
@@ -30,9 +31,7 @@ app.use('/api/files', filesRouter);
 app.use('/api/model', modelRouter);
 app.use('/api/agent', agentRouter);
 app.use('/api/git', gitRouter);
-
-// Route placeholders (to be implemented in later tasks)
-// app.use('/api/completion', completionRouter);
+app.use('/api/completion', completionRouter);
 
 // Initialize WebSocket server
 initWebSocketServer(server);

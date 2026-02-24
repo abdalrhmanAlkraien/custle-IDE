@@ -19,6 +19,7 @@ import type { editor } from 'monaco-editor';
 import { useIDEStore } from '@/store/ideStore';
 import { neuralDarkTheme } from '@/lib/monacoTheme';
 import { filesApi } from '@/lib/api/filesApi';
+import { registerInlineCompletionProvider } from '@/lib/completionProvider';
 
 export function MonacoEditor() {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -62,6 +63,9 @@ export function MonacoEditor() {
     // Define and set neural-dark theme
     monaco.editor.defineTheme('neural-dark', neuralDarkTheme);
     monaco.editor.setTheme('neural-dark');
+
+    // Register inline completion provider for AI autocomplete
+    registerInlineCompletionProvider();
 
     // Register Ctrl+S keybinding (save file)
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
