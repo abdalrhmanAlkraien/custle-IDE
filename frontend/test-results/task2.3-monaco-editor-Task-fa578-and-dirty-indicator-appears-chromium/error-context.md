@@ -1,0 +1,128 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - generic [ref=e6]: ⬡
+          - generic [ref=e7]: NeuralIDE
+        - generic [ref=e8]:
+          - button "File" [ref=e9]
+          - button "Edit" [ref=e10]
+          - button "View" [ref=e11]
+          - button "Help" [ref=e12]
+      - generic "Qwen3-Coder-30B-A3B - Disconnected" [ref=e14]:
+        - generic [ref=e16]: Qwen3-Coder-30B-A3B
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - button "Explorer" [ref=e19]:
+          - img [ref=e20]
+        - button "Search" [ref=e24]:
+          - img [ref=e25]
+        - button "Source Control" [ref=e28]:
+          - img [ref=e29]
+        - button "Extensions" [ref=e33]:
+          - img [ref=e34]
+      - generic [ref=e38]:
+        - generic [ref=e40]:
+          - generic [ref=e41]:
+            - heading "custle-test-238KDA" [level=2] [ref=e42]
+            - button "Close Sidebar" [ref=e43]:
+              - img [ref=e44]
+          - generic [ref=e47]:
+            - button "Files" [ref=e48]:
+              - img [ref=e49]
+              - generic [ref=e53]: Files
+            - button "Search" [ref=e54]:
+              - img [ref=e55]
+              - generic [ref=e58]: Search
+          - generic [ref=e61]:
+            - generic [ref=e62]:
+              - img [ref=e64]
+              - img [ref=e66]
+              - generic [ref=e68]: custle-test-238KDA
+              - generic [ref=e69]: "3"
+              - button [ref=e70]:
+                - img [ref=e71]
+            - generic [ref=e75]:
+              - generic [ref=e76]:
+                - img [ref=e77]
+                - generic [ref=e82]: app.ts
+                - button [ref=e83]:
+                  - img [ref=e84]
+              - generic [ref=e88]:
+                - img [ref=e89]
+                - generic [ref=e94]: index.js
+                - button [ref=e95]:
+                  - img [ref=e96]
+              - generic [ref=e100]:
+                - img [ref=e101]
+                - generic [ref=e106]: styles.css
+                - button [ref=e107]:
+                  - img [ref=e108]
+        - separator [ref=e112]
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic [ref=e113]:
+                  - generic [ref=e115]: app.ts
+                  - button [ref=e116]:
+                    - img [ref=e117]
+                - code [ref=e120]:
+                  - generic [ref=e121]:
+                    - textbox "Editor content"
+                    - textbox [ref=e122]
+                    - generic [ref=e127]: "1"
+                    - generic [ref=e133]: // TypeScript file
+            - separator
+            - generic:
+              - generic:
+                - generic:
+                  - generic [ref=e138]:
+                    - button "Terminal" [ref=e139]:
+                      - img [ref=e140]
+                      - generic [ref=e142]: Terminal
+                    - button "Problems" [ref=e143]:
+                      - img [ref=e144]
+                      - generic [ref=e146]: Problems
+                    - button "Output" [ref=e147]:
+                      - img [ref=e148]
+                      - generic [ref=e151]: Output
+                  - generic [ref=e153]:
+                    - img [ref=e154]
+                    - paragraph [ref=e156]: Real terminal (xterm.js + node-pty) will be implemented in Task 4.1
+        - separator [ref=e157]
+        - generic [ref=e160]:
+          - generic [ref=e161]:
+            - heading "AI Assistant" [level=2] [ref=e162]
+            - generic [ref=e163]:
+              - button "Chat" [ref=e164]
+              - button "Agent" [ref=e165]
+          - generic [ref=e167]:
+            - img [ref=e168]
+            - paragraph [ref=e170]: AI Chat will be implemented in Task 3.2
+    - generic [ref=e171]:
+      - generic [ref=e172]:
+        - generic [ref=e173]:
+          - img [ref=e174]
+          - generic [ref=e178]: main
+        - generic [ref=e179]:
+          - generic [ref=e180]:
+            - img [ref=e181]
+            - generic [ref=e183]: "0"
+          - generic [ref=e184]:
+            - img [ref=e185]
+            - generic [ref=e187]: "0"
+      - generic [ref=e188]:
+        - generic [ref=e189]: Ln 1, Col 1
+        - generic [ref=e190]: typescript
+        - generic [ref=e191]: UTF-8
+        - generic [ref=e192]: LF
+  - alert [ref=e193]
+  - generic [ref=e194]:
+    - alert
+    - alert
+```
