@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { FileTreeItem } from './FileTreeItem';
 import { useFileTree } from '@/hooks/useFileTree';
+import { useFileTreeStore } from '@/store/fileTreeStore';
 import { Loader2 } from 'lucide-react';
 
 export function FileTree() {
   const { tree, loading, error, fetchTree } = useFileTree();
+  const { setFileTree } = useFileTreeStore();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   // Auto-expand root folder when tree loads
@@ -15,6 +17,13 @@ export function FileTree() {
       setExpandedFolders(new Set([tree.path]));
     }
   }, [tree]);
+
+  // Update the global store when tree changes
+  useEffect(() => {
+    if (tree) {
+      setFileTree(tree.children || []);
+    }
+  }, [tree, setFileTree]);
 
   const handleToggleExpand = (path: string) => {
     setExpandedFolders((prev) => {
