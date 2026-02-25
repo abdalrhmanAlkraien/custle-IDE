@@ -137,6 +137,9 @@ const file: FileResponse = response.data;
 9. **Testing mandatory** — every task must have automated tests
 10. **No task complete without passing tests** — all tests must pass
 11. **systemTasks.md updated exactly once per task** — never in a loop
+12. **GitHub token never returned in any /api/github/* response** — only username/avatar_url/name (7.1)
+13. **PAT injected into HTTPS push URL only — never persisted in git config** — restore original remote after push (7.2)
+14. **/api/workspace/browse has NO validatePath() restriction** — intentional, user browses own machine (7.2)
 
 ---
 
@@ -153,8 +156,10 @@ This project uses a structured task system with automated testing for every task
 - Phase4: Terminal (1 task)
 - Phase5: Git Integration (2 tasks)
 - Phase6: Autocomplete & Polish (2 tasks)
+- Phase7: GitHub Integration & Core Fixes (3 tasks)
+- Phase8: UI Polish & Completeness (1 task)
 
-**Total Tasks**: 12
+**Total Tasks**: 16
 
 **Test Scenarios**: `.claude/Phase X/TestX/Task X.Y.md`
 - Auto-generated after task implementation
@@ -193,6 +198,10 @@ This project uses a structured task system with automated testing for every task
 | 5.2 Git Panel UI | Playwright |
 | 6.1 AI Inline Autocomplete | Playwright |
 | 6.2 Polish, Shortcuts & Settings | Playwright |
+| 7.1 GitHub Token Auth + Repo Browser | curl (+ token absent check) |
+| 7.2 Folder Browser + Git Status | curl + Playwright |
+| 7.3 Terminal Fix + Agent Tools | WebSocket + curl + Playwright |
+| 8.1 Menu Bar Dropdowns | curl (health) + Playwright |
 
 ### Execution Workflow
 
@@ -374,6 +383,12 @@ custle-IDE/
 │   ├── Phase6/
 │   │   ├── Task 6.1.md
 │   │   └── Task 6.2.md
+│   ├── Phase7/
+│   │   ├── Task 7.1.md
+│   │   ├── Task 7.2.md
+│   │   └── Task 7.3.md
+│   ├── Phase8/
+│   │   └── Task 8.1.md
 │   ├── processed/                   ← Completed task docs
 │   │   ├── Task X.Y.md
 │   │   └── Task X.Y - Test Results.md
@@ -396,13 +411,18 @@ custle-IDE/
 │   │   │   ├── files.ts             ← validatePath() required
 │   │   │   ├── model.ts             ← apiKey stripped from responses
 │   │   │   ├── terminal.ts
-│   │   │   └── git.ts
+│   │   │   ├── git.ts
+│   │   │   └── github.ts            ← token NEVER in responses (7.1)
 │   │   ├── services/
 │   │   │   ├── fileService.ts
 │   │   │   ├── watcherService.ts
 │   │   │   ├── modelService.ts
 │   │   │   ├── ptyService.ts
-│   │   │   └── gitService.ts
+│   │   │   ├── gitService.ts
+│   │   │   ├── githubService.ts     ← GitHub API + better-sqlite3 (7.1)
+│   │   │   └── terminalService.ts   ← PTY rewrite + agent tools (7.3)
+│   │   ├── db/
+│   │   │   └── database.ts          ← better-sqlite3 setup (7.1)
 │   │   └── utils/
 │   │       └── pathSecurity.ts      ← validatePath()
 │   ├── package.json
@@ -419,11 +439,22 @@ custle-IDE/
 │   │   │   │   ├── EditorArea.tsx
 │   │   │   │   └── MonacoEditor.tsx  ← dynamic import, ssr:false
 │   │   │   ├── terminal/
-│   │   │   │   └── TerminalPanel.tsx ← dynamic import, ssr:false
+│   │   │   │   ├── TerminalPanel.tsx ← dynamic import, ssr:false
+│   │   │   │   ├── XTermWrapper.tsx  ← xterm.js only here (7.3)
+│   │   │   │   └── TerminalTabs.tsx  ← multi-tab support (7.3)
 │   │   │   ├── chat/
 │   │   │   │   └── ChatPanel.tsx
-│   │   │   └── git/
-│   │   │       └── GitPanel.tsx
+│   │   │   ├── git/
+│   │   │   │   ├── GitPanel.tsx
+│   │   │   │   ├── GitHubConnect.tsx ← PAT token input (7.1)
+│   │   │   │   └── RepoList.tsx      ← repo browser (7.1)
+│   │   │   ├── sidebar/
+│   │   │   │   └── FolderBrowser.tsx ← native folder picker (7.2)
+│   │   │   └── titlebar/
+│   │   │       ├── MenuBar.tsx       ← all 4 menus (8.1)
+│   │   │       ├── MenuDropdown.tsx  ← reusable dropdown (8.1)
+│   │   │       ├── AboutModal.tsx    ← about dialog (8.1)
+│   │   │       └── ShortcutsModal.tsx← keyboard ref (8.1)
 │   │   ├── store/
 │   │   │   └── ideStore.ts          ← Zustand
 │   │   └── lib/
@@ -447,11 +478,13 @@ custle-IDE/
 - ⏳ Phase4: Terminal — Not Started
 - ⏳ Phase5: Git Integration — Not Started
 - ⏳ Phase6: Autocomplete & Polish — Not Started
+- ⏳ Phase7: GitHub Integration & Core Fixes — Not Started
+- ⏳ Phase8: UI Polish & Completeness — Not Started
 
 **Progress**:
-- Total Tasks: 12
+- Total Tasks: 16
 - Completed: 0
-- Pending: 12
+- Pending: 16
 - Percentage: 0%
 - Tests Passed: 0/0
 
@@ -514,6 +547,11 @@ custle-IDE/
 - [ ] Autocomplete: 700ms debounce + AbortController
 - [ ] `reactStrictMode: false` in `next.config.ts`
 - [ ] systemTasks.md updated **exactly once** per task
+- [ ] GitHub routes: token field absent from ALL `/api/github/*` responses (7.1)
+- [ ] GitHub push: PAT injected into URL only, original remote restored after (7.2)
+- [ ] xterm imports: ONLY inside `XTermWrapper.tsx` — never at module level in other files (7.3)
+- [ ] Menu items: `<button onClick>` only — no `<form>` tags anywhere (8.1)
+- [ ] Menu close: `mousedown` listener not `click` — prevents same-click closing (8.1)
 
 ### Communication Style
 - Show progress during implementation step by step
@@ -608,7 +646,7 @@ To begin development:
 4. Watch as implementation AND tests execute automatically
 5. Review results including test outcomes
 6. Choose to continue, review, fix, or pause
-7. Repeat until all 12 tasks complete (all with passing tests!)
+7. Repeat until all 16 tasks complete (all with passing tests!)
 ```
 
 ---

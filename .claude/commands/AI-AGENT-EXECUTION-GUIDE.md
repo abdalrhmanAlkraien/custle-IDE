@@ -10,7 +10,7 @@
 ## 📋 Overview
 
 This project uses a **structured task execution system** with:
-- 12 tasks across 6 phases
+- 16 tasks across 8 phases
 - Automated testing: curl, WebSocket, and Playwright
 - Comprehensive documentation requirements
 - Token usage tracking
@@ -148,11 +148,17 @@ cd frontend && npm run build
 | Backend routes (2.1, 3.1, 5.1) | curl commands |
 | WebSocket (2.1 watcher, 4.1 terminal) | WebSocket client |
 | Frontend UI (1.2, 2.2, 2.3, 3.2, 5.2, 6.1, 6.2) | Playwright |
+| GitHub API + DB (7.1) | curl commands |
+| Folder browser + Git status (7.2) | curl + Playwright |
+| Terminal fix + Agent tools (7.3) | WebSocket + curl + Playwright |
+| Menu bar dropdowns (8.1) | curl (health) + Playwright |
 
 **Always include security scenarios where applicable:**
 - File routes → path traversal blocked (403)
 - Model config → apiKey absent from response
 - Terminal → PTY session cleanup on close
+- GitHub routes → token field absent from ALL responses (7.1)
+- Folder browser → no validatePath restriction (intentional — user browses own machine) (7.2)
 
 ### Step 8: Execute Tests
 
@@ -345,6 +351,8 @@ Before marking COMPLETED:
 - [ ] apiKey absent from API responses (model config task)
 - [ ] PTY session cleanup verified (terminal task)
 - [ ] Workspace root enforced on all file operations
+- [ ] GitHub token absent from ALL /api/github/* responses (7.1)
+- [ ] PAT injected into push URL only — never persisted in git config (7.2)
 
 **Testing:**
 - [ ] Test scenarios generated → `.claude/TestX/Task X.Y.md`

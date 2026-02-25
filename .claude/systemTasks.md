@@ -915,3 +915,188 @@ For each task, ensure:
 **Last Updated**: 2026-02-23
 **Version**: 1.0
 **Project**: NeuralIDE
+
+---
+
+## Phase 7: GitHub Integration & Core Fixes (3 tasks)
+
+**Progress**: 1/3 (33%)
+**Estimated Duration**: 3.75-4.5 hours
+**Estimated Cost**: ~$1.37 (Implementation: $0.98, Testing: $0.39)
+**Actual Cost**: $0.14 (Implementation: $0.11, Testing: $0.03)
+**✨ Test Status**: 1/3 Passed (33%)
+
+### Task 7.1: GitHub Integration — Token Auth, Credential Storage & Repository Browser
+
+- **Status**: ✅ COMPLETE
+- **Task Definition**: `.claude/Phase7/Task 7.1.md`
+- **Dependencies**: 5.1 ✅, 5.2 ✅
+- **Blocks**: 7.2
+- **Assigned To**: Claude Code
+- **Started**: 2026-02-25 12:00:00
+- **Completed**: 2026-02-25 12:45:00
+- **Duration**: 45 minutes
+- **Estimated Duration**: 75-90 minutes
+- **Estimated Tokens**: 11,500
+- **Estimated Cost**: ~$0.45
+- **Actual Tokens**:
+  - Input: 8,000
+  - Output: 3,500
+  - Total: 11,500
+- **Actual Cost**: $0.11
+- **Fix Count**: 0
+- **Fix Tokens**: 0
+- **Fix Cost**: $0.00
+- **Notes**: better-sqlite3 installed. DB at backend/data/custle.db. Token NEVER in responses (verified). Repos cached in DB. 7 files created, 2 modified. TypeScript 0 errors.
+- **Processed File**: `.claude/processed/Task 7.1.md`
+
+**✨ Testing**:
+- **Test Status**: ✅ PASSED
+- **Test File**: `.claude/Phase 7/Test7/Task 7.1 - Test Scenarios.md`
+- **Test Scenarios**: 12 scenarios (8 curl + 4 Playwright), 4 executed (8 require GitHub PAT)
+  - Passed: 4/4 (100%)
+  - Failed: 0
+  - Skipped: 8 (require valid GitHub PAT for manual testing)
+  - Pass Rate: 100%
+- **Test Duration**: ~3 minutes
+- **Test Cost**: $0.03
+- **Last Tested**: 2026-02-25 12:43:00
+- **Console Errors**: 0
+- **Network Errors**: 0
+- **Security Issues**: 0 (token never in responses - verified)
+- **TypeScript Errors**: 0 (backend + frontend)
+- **Test Results File**: `.claude/processed/Task 7.1 - Test Results.md`
+
+---
+
+### Task 7.2: Native Folder Browser & Git Status for Opened Projects
+
+- **Status**: ⏳ PENDING
+- **Task Definition**: `.claude/Phase7/Task 7.2.md`
+- **Dependencies**: 7.1, 5.1 ✅, 2.1 ✅
+- **Blocks**: 8.1
+- **Assigned To**: Claude Code
+- **Started**: -
+- **Completed**: -
+- **Duration**: -
+- **Estimated Duration**: 70-85 minutes
+- **Estimated Tokens**: -
+- **Estimated Cost**: ~$0.42
+- **Actual Tokens**:
+  - Input: -
+  - Output: -
+  - Total: -
+- **Actual Cost**: $0.00
+- **Fix Count**: 0
+- **Fix Tokens**: 0
+- **Fix Cost**: $0.00
+- **Notes**: /api/workspace/browse has NO validatePath restriction — intentional. Push via https://TOKEN@github.com/... URL, restore remote after. Always call checkIsRepo() before git ops.
+- **Processed File**: -
+
+**✨ Testing**:
+- **Test Status**: ⏳ NOT_TESTED
+- **Test File**: `.claude/Test7/Task 7.2.md`
+- **Test Scenarios**: 13 estimated (7 curl + 6 Playwright)
+  - Passed: -
+  - Failed: -
+  - Pass Rate: -
+- **Test Duration**: -
+- **Test Cost**: -
+- **Last Tested**: -
+- **Console Errors**: -
+- **Network Errors**: -
+- **Security Issues**: -
+- **TypeScript Errors**: -
+- **Test Results File**: `.claude/processed/Task 7.2 - Test Results.md`
+
+---
+
+### Task 7.3: Real Terminal Connection + AI Agent Terminal Access
+
+- **Status**: ⏳ PENDING
+- **Task Definition**: `.claude/Phase7/Task 7.3.md`
+- **Dependencies**: 4.1 ✅, 3.2 ✅
+- **Blocks**: Nothing
+- **Assigned To**: Claude Code
+- **Started**: -
+- **Completed**: -
+- **Duration**: -
+- **Estimated Duration**: 80-100 minutes
+- **Estimated Tokens**: -
+- **Estimated Cost**: ~$0.50
+- **Actual Tokens**:
+  - Input: -
+  - Output: -
+  - Total: -
+- **Actual Cost**: $0.00
+- **Fix Count**: 0
+- **Fix Tokens**: 0
+- **Fix Cost**: $0.00
+- **Notes**: npm rebuild node-pty if native compile fails. minHeight:0 critical on container div. Commands echo from PTY — do NOT echo in frontend. Agent tool output shown in chat as code block with exit code. One WebSocket per terminal tab.
+- **Processed File**: -
+
+**✨ Testing**:
+- **Test Status**: ⏳ NOT_TESTED
+- **Test File**: `.claude/Test7/Task 7.3.md`
+- **Test Scenarios**: 12 estimated (7 WebSocket+curl + 5 Playwright)
+  - Passed: -
+  - Failed: -
+  - Pass Rate: -
+- **Test Duration**: -
+- **Test Cost**: -
+- **Last Tested**: -
+- **Console Errors**: -
+- **Network Errors**: -
+- **Security Issues**: -
+- **TypeScript Errors**: -
+- **Test Results File**: `.claude/processed/Task 7.3 - Test Results.md`
+
+---
+
+## Phase 8: UI Polish & Completeness (1 task)
+
+**Progress**: 0/1 (0%)
+**Estimated Duration**: 60-75 minutes
+**Estimated Cost**: ~$0.38 (Implementation: $0.28, Testing: $0.10)
+**Actual Cost**: $0.00
+**✨ Test Status**: 0/1 Not Started
+
+### Task 8.1: Menu Bar — File, Edit, View, Help Dropdowns
+
+- **Status**: ⏳ PENDING
+- **Task Definition**: `.claude/Phase8/Task 8.1.md`
+- **Dependencies**: 1.2 ✅, 2.3 ✅, 7.2, 7.3
+- **Blocks**: Nothing
+- **Assigned To**: Claude Code
+- **Started**: -
+- **Completed**: -
+- **Duration**: -
+- **Estimated Duration**: 60-75 minutes
+- **Estimated Tokens**: -
+- **Estimated Cost**: ~$0.38
+- **Actual Tokens**:
+  - Input: -
+  - Output: -
+  - Total: -
+- **Actual Cost**: $0.00
+- **Fix Count**: 0
+- **Fix Tokens**: 0
+- **Fix Cost**: $0.00
+- **Notes**: Use mousedown (not click) for outside-close. Do NOT preventDefault Ctrl+F when editor focused. All items use button onClick, no form tags. Monaco ref via setMonacoEditor() in onMount. recentWorkspaces + zoomLevel persisted to localStorage.
+- **Processed File**: -
+
+**✨ Testing**:
+- **Test Status**: ⏳ NOT_TESTED
+- **Test File**: `.claude/Test8/Task 8.1.md`
+- **Test Scenarios**: 15 estimated (1 curl + 14 Playwright)
+  - Passed: -
+  - Failed: -
+  - Pass Rate: -
+- **Test Duration**: -
+- **Test Cost**: -
+- **Last Tested**: -
+- **Console Errors**: -
+- **Network Errors**: -
+- **Security Issues**: -
+- **TypeScript Errors**: -
+- **Test Results File**: `.claude/processed/Task 8.1 - Test Results.md`

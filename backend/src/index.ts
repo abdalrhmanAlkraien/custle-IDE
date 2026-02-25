@@ -7,6 +7,7 @@ import filesRouter from './routes/files';
 import modelRouter from './routes/model';
 import agentRouter from './routes/agent';
 import gitRouter from './routes/git';
+import githubRouter from './routes/github';
 import completionRouter from './routes/completion';
 import { initWebSocketServer } from './websocket/wsServer';
 
@@ -31,6 +32,7 @@ app.use('/api/files', filesRouter);
 app.use('/api/model', modelRouter);
 app.use('/api/agent', agentRouter);
 app.use('/api/git', gitRouter);
+app.use('/api/github', githubRouter);
 app.use('/api/completion', completionRouter);
 
 // Initialize WebSocket server
