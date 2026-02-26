@@ -12,10 +12,15 @@ export interface GitFileStatus {
 }
 
 export interface GitStatus {
-  branch: string;
+  isRepo: boolean;
+  branch: string | null;
   ahead: number;
   behind: number;
-  files: GitFileStatus[];
+  remote: string | null;
+  remoteOwner: string | null;
+  repoName: string | null;
+  files?: GitFileStatus[];
+  changes?: GitFileStatus[];
 }
 
 export interface GitCommit {

@@ -47,8 +47,21 @@ export const useGitStore = create<GitStore>((set, get) => ({
   refresh: async () => {
     set({ isLoading: true, error: null });
     try {
-      const [status, log, branches] = await Promise.all([
-        gitApi.getGitStatus(),
+      const status = await gitApi.getGitStatus();
+
+      // If not a git repo, clear everything
+      if (!status.isRepo) {
+        set({
+          status: null,
+          history: [],
+          branches: null,
+          isLoading: false,
+        });
+        return;
+      }
+
+      // Otherwise load full git data
+      const [log, branches] = await Promise.all([
         gitApi.getGitLog(50),
         gitApi.getGitBranches(),
       ]);
@@ -105,7 +118,8 @@ export const useGitStore = create<GitStore>((set, get) => ({
     const { status } = get();
     if (!status) return;
 
-    const unstagedFiles = status.files.filter((f) => !f.staged).map((f) => f.path);
+    const fileList = status.changes || status.files || [];
+    const unstagedFiles = fileList.filter((f) => !f.staged).map((f) => f.path);
     if (unstagedFiles.length === 0) return;
 
     set({ isLoading: true, error: null });
@@ -127,7 +141,8 @@ export const useGitStore = create<GitStore>((set, get) => ({
     const { status } = get();
     if (!status) return;
 
-    const stagedFiles = status.files.filter((f) => f.staged).map((f) => f.path);
+    const fileList = status.changes || status.files || [];
+    const stagedFiles = fileList.filter((f) => f.staged).map((f) => f.path);
     if (stagedFiles.length === 0) return;
 
     set({ isLoading: true, error: null });

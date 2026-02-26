@@ -14,6 +14,12 @@ export interface Tab {
   cursorCol: number;
 }
 
+// Terminal Tab interface
+export interface TerminalTab {
+  id: string;       // session ID (uuid)
+  label: string;    // display name
+}
+
 // IDE Store interface
 export interface IDEStore {
   // Workspace
@@ -63,6 +69,37 @@ export interface IDEStore {
   // Chat
   chatMode: 'chat' | 'agent';
   setChatMode: (mode: IDEStore['chatMode']) => void;
+
+  // Terminal Tabs
+  terminalTabs: TerminalTab[];
+  activeTerminalId: string | null;
+  addTerminalTab: () => void;
+  removeTerminalTab: (id: string) => void;
+  setActiveTerminal: (id: string) => void;
+
+  // Workspace history (for File → Open Recent)
+  recentWorkspaces: string[];
+  addRecentWorkspace: (path: string) => void;
+
+  // Zoom
+  zoomLevel: number;
+  setZoomLevel: (level: number) => void;
+
+  // Monaco editor ref
+  monacoEditor: any; // monaco.editor.IStandaloneCodeEditor | null
+  setMonacoEditor: (editor: any) => void;
+
+  // Folder browser modal
+  isFolderBrowserOpen: boolean;
+  openFolderBrowser: () => void;
+  closeFolderBrowser: () => void;
+
+  // Helper methods
+  openNewUntitledTab: () => void;
+  closeActiveTab: () => void;
+
+  // Workspace getter
+  workspace: { path: string; name: string } | null;
 }
 
 // Create the store
@@ -257,4 +294,112 @@ export const useIDEStore = create<IDEStore>((set) => ({
   // Chat
   chatMode: 'chat',
   setChatMode: (mode) => set({ chatMode: mode }),
+
+  // Terminal Tabs
+  terminalTabs: [{ id: 'default', label: 'Terminal' }],
+  activeTerminalId: 'default',
+
+  addTerminalTab: () =>
+    set((state) => {
+      const newId = uuidv4();
+      const newTab: TerminalTab = {
+        id: newId,
+        label: `Terminal ${state.terminalTabs.length + 1}`,
+      };
+      return {
+        terminalTabs: [...state.terminalTabs, newTab],
+        activeTerminalId: newId,
+      };
+    }),
+
+  removeTerminalTab: (id) =>
+    set((state) => {
+      const newTabs = state.terminalTabs.filter((t) => t.id !== id);
+      let newActiveId = state.activeTerminalId;
+
+      // If removing active tab, switch to another tab
+      if (state.activeTerminalId === id) {
+        const closedIndex = state.terminalTabs.findIndex((t) => t.id === id);
+        if (newTabs.length > 0) {
+          const newIndex = Math.min(closedIndex, newTabs.length - 1);
+          newActiveId = newTabs[newIndex]?.id || null;
+        } else {
+          newActiveId = null;
+        }
+      }
+
+      return {
+        terminalTabs: newTabs,
+        activeTerminalId: newActiveId,
+      };
+    }),
+
+  setActiveTerminal: (id) => set({ activeTerminalId: id }),
+
+  // Workspace history
+  recentWorkspaces: [],
+  addRecentWorkspace: (path) =>
+    set((state) => {
+      const updated = [path, ...state.recentWorkspaces.filter((p) => p !== path)].slice(0, 5);
+      return { recentWorkspaces: updated };
+    }),
+
+  // Zoom
+  zoomLevel: 0,
+  setZoomLevel: (level) => set({ zoomLevel: Math.max(-3, Math.min(5, level)) }),
+
+  // Monaco editor ref
+  monacoEditor: null,
+  setMonacoEditor: (editor) => set({ monacoEditor: editor }),
+
+  // Folder browser modal
+  isFolderBrowserOpen: false,
+  openFolderBrowser: () => set({ isFolderBrowserOpen: true }),
+  closeFolderBrowser: () => set({ isFolderBrowserOpen: false }),
+
+  // Helper methods
+  openNewUntitledTab: () =>
+    set((state) => {
+      const newTab: Tab = {
+        id: `untitled-${Date.now()}`,
+        path: '',
+        relativePath: 'Untitled',
+        name: 'Untitled',
+        content: '',
+        language: 'plaintext',
+        isDirty: true,
+        cursorLine: 1,
+        cursorCol: 1,
+      };
+      return {
+        tabs: [...state.tabs, newTab],
+        activeTabId: newTab.id,
+      };
+    }),
+
+  closeActiveTab: () =>
+    set((state) => {
+      if (!state.activeTabId) return state;
+      const newTabs = state.tabs.filter((t) => t.id !== state.activeTabId);
+      let newActiveTabId = null;
+      if (newTabs.length > 0) {
+        const closedIndex = state.tabs.findIndex((t) => t.id === state.activeTabId);
+        const newIndex = Math.min(closedIndex, newTabs.length - 1);
+        newActiveTabId = newTabs[newIndex]?.id || null;
+      }
+      return {
+        tabs: newTabs,
+        activeTabId: newActiveTabId,
+      };
+    }),
+
+  // Workspace getter
+  get workspace() {
+    const state = useIDEStore.getState();
+    if (!state.workspacePath) return null;
+    return {
+      path: state.workspacePath,
+      name: state.workspaceName,
+    };
+  },
 }));

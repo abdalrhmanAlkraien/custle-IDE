@@ -3,6 +3,7 @@ import { promisify } from 'util';
 import path from 'path';
 import { readFile, writeFile, buildTree, createPath, deletePath, searchFiles } from './fileService';
 import { getActiveConfigFull } from './modelService';
+import { terminalService } from './terminalService';
 import axios from 'axios';
 
 const execAsync = promisify(exec);
@@ -65,6 +66,29 @@ export const AGENT_TOOLS: AgentTool[] = [
     description: 'Delete a file or folder',
     parameters: {
       path: { type: 'string', description: 'Path relative to workspace root' },
+    },
+  },
+  {
+    name: 'terminal_execute',
+    description: 'Execute a shell command in the user\'s terminal and return the output. Use this to run scripts, install packages, compile code, run tests, or any shell operation.',
+    parameters: {
+      command: { type: 'string', description: 'The shell command to execute. Examples: "npm install", "ls -la", "python script.py"' },
+      session_id: { type: 'string', description: 'Terminal session ID. Use "default" if only one terminal is open.' },
+    },
+  },
+  {
+    name: 'terminal_read',
+    description: 'Read the current terminal output buffer (last 8KB). Use this to check command output, read logs, or observe terminal state without running a new command.',
+    parameters: {
+      session_id: { type: 'string', description: 'Terminal session ID. Defaults to "default".' },
+    },
+  },
+  {
+    name: 'terminal_write',
+    description: 'Send raw input to the terminal (like typing). Use terminal_execute for commands. Use terminal_write for interactive prompts (e.g. answering "y/n" questions, typing passwords, sending Ctrl+C).',
+    parameters: {
+      input: { type: 'string', description: 'Raw input to send. Use \\r for Enter, \\u0003 for Ctrl+C, \\u0004 for Ctrl+D.' },
+      session_id: { type: 'string', description: 'Terminal session ID. Defaults to "default".' },
     },
   },
 ];
@@ -186,6 +210,59 @@ export async function executeTool(
         return {
           success: true,
           output: `Deleted: ${args.path}`,
+        };
+      }
+
+      case 'terminal_execute': {
+        const { command, session_id = 'default' } = args;
+
+        // Ensure session exists (create if needed, with workspace cwd)
+        const sessions = terminalService.getSessions();
+        let session = sessions.find((s) => s.id === session_id);
+        if (!session) {
+          terminalService.create(session_id, workspaceRoot);
+          // Brief delay for shell to initialize
+          await new Promise((r) => setTimeout(r, 500));
+        }
+
+        const result = await terminalService.execute(session_id, command);
+        return {
+          success: result.exitCode === 0,
+          output: `$ ${command}\n${result.output}\n\nExit code: ${result.exitCode}`,
+        };
+      }
+
+      case 'terminal_read': {
+        const { session_id = 'default' } = args;
+        const sessions = terminalService.getSessions();
+        const session = sessions.find((s) => s.id === session_id);
+        if (!session) {
+          return {
+            success: false,
+            error: 'No terminal session found',
+            output: '',
+          };
+        }
+        return {
+          success: true,
+          output: session.outputBuffer || '(empty buffer)',
+        };
+      }
+
+      case 'terminal_write': {
+        const { input, session_id = 'default' } = args;
+        const sessions = terminalService.getSessions();
+        const session = sessions.find((s) => s.id === session_id);
+        if (!session) {
+          return {
+            success: false,
+            error: 'No terminal session found',
+          };
+        }
+        terminalService.write(session_id, input);
+        return {
+          success: true,
+          output: 'Input sent to terminal',
         };
       }
 

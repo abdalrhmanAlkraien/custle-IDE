@@ -2,7 +2,7 @@ import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import http from 'http';
 import { config } from './config';
-import workspaceRouter from './routes/workspace';
+import workspaceRouter, { getCurrentWorkspace } from './routes/workspace';
 import filesRouter from './routes/files';
 import modelRouter from './routes/model';
 import agentRouter from './routes/agent';
@@ -13,6 +13,7 @@ import { initWebSocketServer } from './websocket/wsServer';
 
 const app = express();
 const server = http.createServer(app);
+const startTime = Date.now();
 
 // Middleware
 app.use(cors({
@@ -22,8 +23,14 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 
 // Health check endpoint
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/api/health', (_req: Request, res: Response) => {
+  const workspace = getCurrentWorkspace();
+  res.json({
+    status: 'ok',
+    version: '0.1.0',
+    uptime: Math.floor((Date.now() - startTime) / 1000),
+    workspace: workspace ? workspace.path : null,
+  });
 });
 
 // API Routes

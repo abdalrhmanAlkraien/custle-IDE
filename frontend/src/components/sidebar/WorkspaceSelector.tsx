@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FolderOpen, Clock } from 'lucide-react';
+import { FolderOpen, Clock, Search } from 'lucide-react';
 import { filesApi } from '@/lib/api/filesApi';
 import { useIDEStore } from '@/store/ideStore';
+import { FolderBrowser } from './FolderBrowser';
 
 const RECENT_WORKSPACES_KEY = 'custle-recent-workspaces';
 const MAX_RECENT = 5;
@@ -19,6 +20,7 @@ export function WorkspaceSelector() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recentWorkspaces, setRecentWorkspaces] = useState<RecentWorkspace[]>([]);
+  const [showBrowser, setShowBrowser] = useState(false);
   const { setWorkspace } = useIDEStore();
 
   // Load recent workspaces from localStorage
@@ -75,6 +77,11 @@ export function WorkspaceSelector() {
     }
   };
 
+  const handleFolderSelect = (path: string) => {
+    setFolderPath(path);
+    handleOpenWorkspace(path);
+  };
+
   return (
     <div className="flex items-center justify-center h-full p-8">
       <div className="w-full max-w-2xl">
@@ -90,22 +97,7 @@ export function WorkspaceSelector() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="folder-path" className="block text-sm font-medium text-gray-300 mb-2">
-                Folder Path
-              </label>
-              <input
-                id="folder-path"
-                type="text"
-                value={folderPath}
-                onChange={(e) => setFolderPath(e.target.value)}
-                placeholder="/Users/yourname/projects/my-project"
-                className="w-full bg-gray-900 border border-gray-600 rounded px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={loading}
-              />
-            </div>
-
+          <div className="space-y-4">
             {error && (
               <div className="bg-red-900/30 border border-red-700 rounded px-4 py-3 text-red-300 text-sm">
                 {error}
@@ -113,13 +105,14 @@ export function WorkspaceSelector() {
             )}
 
             <button
-              type="submit"
-              disabled={loading || !folderPath.trim()}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium py-3 px-4 rounded transition-colors"
+              onClick={() => setShowBrowser(true)}
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium py-3 px-4 rounded transition-colors flex items-center justify-center gap-2"
             >
-              {loading ? 'Opening...' : 'Open Folder'}
+              <Search className="w-5 h-5" />
+              {loading ? 'Opening...' : 'Browse for Folder...'}
             </button>
-          </form>
+          </div>
         </div>
 
         {/* Recent Workspaces */}
@@ -154,6 +147,13 @@ export function WorkspaceSelector() {
             </div>
           </div>
         )}
+
+        {/* Folder Browser Modal */}
+        <FolderBrowser
+          isOpen={showBrowser}
+          onClose={() => setShowBrowser(false)}
+          onSelect={handleFolderSelect}
+        />
       </div>
     </div>
   );

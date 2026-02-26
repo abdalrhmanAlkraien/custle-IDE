@@ -1,20 +1,22 @@
 import { Router, Request, Response } from 'express';
 import * as gitService from '../services/gitService';
+import { getCredentials } from '../services/githubService';
+import { getCurrentWorkspace } from './workspace';
 
 const router = Router();
 
 /**
  * GET /api/git/status
- * Get git status (branch, ahead/behind, changed files)
+ * Get comprehensive workspace git status
  */
 router.get('/status', async (_req: Request, res: Response) => {
   try {
-    const isRepo = await gitService.isGitRepository();
-    if (!isRepo) {
-      return res.status(400).json({ error: 'Not a git repository' });
+    const workspace = getCurrentWorkspace();
+    if (!workspace) {
+      return res.json({ isRepo: false });
     }
 
-    const status = await gitService.getStatus();
+    const status = await gitService.getWorkspaceGitStatus(workspace.path);
     return res.json(status);
   } catch (error: any) {
     console.error('Git status error:', error);
@@ -132,11 +134,29 @@ router.post('/commit', async (req: Request, res: Response) => {
 /**
  * POST /api/git/push
  * Push to remote repository
+ * Uses GitHub PAT if available for HTTPS authentication
+ * Body: { remote?: string, branch?: string }
  */
-router.post('/push', async (_req: Request, res: Response) => {
+router.post('/push', async (req: Request, res: Response) => {
   try {
-    const result = await gitService.push();
-    return res.json(result);
+    const { remote, branch } = req.body;
+
+    // Check if GitHub credentials are available
+    const githubCreds = getCredentials();
+
+    if (githubCreds && githubCreds.token) {
+      // Use PAT-authenticated push
+      const result = await gitService.pushWithToken(
+        githubCreds.token,
+        remote || 'origin',
+        branch
+      );
+      return res.json(result);
+    } else {
+      // Fall back to regular push (SSH or cached credentials)
+      const result = await gitService.push(remote, branch);
+      return res.json(result);
+    }
   } catch (error: any) {
     console.error('Git push error:', error);
     return res.status(500).json({ error: error.message });

@@ -81,53 +81,78 @@ export default function GitPanel() {
     }
   };
 
-  const stagedFiles = status?.files.filter((f) => f.staged) || [];
-  const unstagedFiles = status?.files.filter((f) => !f.staged) || [];
+  const fileList = status?.changes || status?.files || [];
+  const stagedFiles = fileList.filter((f) => f.staged);
+  const unstagedFiles = fileList.filter((f) => !f.staged);
   const canCommit = stagedFiles.length > 0 && commitMessage.trim().length > 0;
+
+  // Check if workspace is a git repository
+  const isRepo = status?.isRepo ?? true; // Default to true for backwards compatibility
 
   return (
     <div className="h-full flex flex-col bg-gray-900 text-gray-300">
-      {/* Header with push/pull/refresh */}
-      <div className="flex-shrink-0 px-3 py-2 border-b border-gray-800">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase">Source Control</h2>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={push}
-              disabled={isLoading}
-              className="p-1.5 hover:bg-gray-800 rounded transition-colors disabled:opacity-50"
-              title="Push"
-            >
-              <ArrowUp size={16} className="text-gray-400" />
-            </button>
-            <button
-              onClick={pull}
-              disabled={isLoading}
-              className="p-1.5 hover:bg-gray-800 rounded transition-colors disabled:opacity-50"
-              title="Pull"
-            >
-              <ArrowDown size={16} className="text-gray-400" />
-            </button>
-            <button
-              onClick={refresh}
-              disabled={isLoading}
-              className="p-1.5 hover:bg-gray-800 rounded transition-colors disabled:opacity-50"
-              title="Refresh"
-            >
-              <RefreshCw size={16} className={`text-gray-400 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
+      {/* Not a git repo message */}
+      {!isRepo ? (
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="text-center">
+            <AlertCircle size={48} className="text-gray-600 mx-auto mb-3" />
+            <h3 className="text-sm font-medium text-gray-400 mb-1">Not a Git Repository</h3>
+            <p className="text-xs text-gray-500">
+              Initialize git in this workspace to enable source control
+            </p>
           </div>
         </div>
+      ) : (
+        <>
+          {/* Header with push/pull/refresh */}
+          <div className="flex-shrink-0 px-3 py-2 border-b border-gray-800">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-sm font-semibold text-gray-400 uppercase">Source Control</h2>
+                {/* Repository info */}
+                {status?.remoteOwner && status?.repoName && (
+                  <div className="text-xs text-gray-500 truncate">
+                    {status.remoteOwner}/{status.repoName}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={push}
+                  disabled={isLoading}
+                  className="p-1.5 hover:bg-gray-800 rounded transition-colors disabled:opacity-50"
+                  title="Push"
+                >
+                  <ArrowUp size={16} className="text-gray-400" />
+                </button>
+                <button
+                  onClick={pull}
+                  disabled={isLoading}
+                  className="p-1.5 hover:bg-gray-800 rounded transition-colors disabled:opacity-50"
+                  title="Pull"
+                >
+                  <ArrowDown size={16} className="text-gray-400" />
+                </button>
+                <button
+                  onClick={refresh}
+                  disabled={isLoading}
+                  className="p-1.5 hover:bg-gray-800 rounded transition-colors disabled:opacity-50"
+                  title="Refresh"
+                >
+                  <RefreshCw size={16} className={`text-gray-400 ${isLoading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+            </div>
 
-        {/* Branch switcher */}
-        {branches && (
-          <BranchSwitcher
-            branches={branches}
-            onCheckout={checkout}
-            onCreate={createBranch}
-          />
-        )}
-      </div>
+            {/* Branch switcher */}
+            {branches && (
+              <BranchSwitcher
+                branches={branches}
+                onCheckout={checkout}
+                onCreate={createBranch}
+              />
+            )}
+          </div>
 
       {/* Error message */}
       {error && (
@@ -246,13 +271,15 @@ export default function GitPanel() {
         <GitHistory commits={history} />
       </div>
 
-      {/* Status bar */}
-      {status && (
-        <div className="flex-shrink-0 px-3 py-1.5 border-t border-gray-800 text-xs text-gray-500">
-          {status.ahead > 0 && <span>↑{status.ahead} </span>}
-          {status.behind > 0 && <span>↓{status.behind} </span>}
-          {status.ahead === 0 && status.behind === 0 && <span>Up to date</span>}
-        </div>
+          {/* Status bar */}
+          {status && (
+            <div className="flex-shrink-0 px-3 py-1.5 border-t border-gray-800 text-xs text-gray-500">
+              {status.ahead > 0 && <span>↑{status.ahead} </span>}
+              {status.behind > 0 && <span>↓{status.behind} </span>}
+              {status.ahead === 0 && status.behind === 0 && <span>Up to date</span>}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

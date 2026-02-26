@@ -1,11 +1,10 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
 import { WebSocketMessage } from '../types';
-import * as terminalService from '../services/terminalService';
+import { terminalService } from '../services/terminalService';
 
 let wss: WebSocketServer | null = null;
 const clients: Set<WebSocket> = new Set();
-const clientSessions: Map<WebSocket, Set<string>> = new Map();
 
 /**
  * Initialize WebSocket server
@@ -16,7 +15,10 @@ export function initWebSocketServer(server: Server): void {
   wss.on('connection', (ws: WebSocket) => {
     console.log('WebSocket client connected');
     clients.add(ws);
-    clientSessions.set(ws, new Set());
+
+    // Track sessions and unsubscribers for this client
+    const clientSessions = new Set<string>();
+    const unsubscribers = new Map<string, () => void>();
 
     // Handle incoming messages
     ws.on('message', (data: Buffer) => {
@@ -30,62 +32,112 @@ export function initWebSocketServer(server: Server): void {
         }
 
         // Terminal message handlers
-        if (message.type === 'terminal:create') {
-          const { sessionId, cwd, cols, rows } = message as any;
-          try {
-            const session = terminalService.createSession(
-              sessionId,
-              ws,
-              cwd || process.cwd(),
-              cols || 80,
-              rows || 24
-            );
+        switch (message.type) {
+          case 'terminal:create': {
+            const { sessionId, cwd, cols, rows } = message as any;
+            try {
+              const session = terminalService.create(
+                sessionId,
+                cwd,
+                cols || 80,
+                rows || 24
+              );
 
-            // Track session for this client
-            clientSessions.get(ws)?.add(sessionId);
+              // Track session for this client
+              clientSessions.add(sessionId);
 
-            ws.send(JSON.stringify({
-              type: 'terminal:created',
-              sessionId,
-              cwd: session.cwd,
-            }));
-          } catch (error: any) {
-            ws.send(JSON.stringify({
-              type: 'terminal:error',
-              sessionId,
-              error: error.message,
-            }));
-          }
-        } else if (message.type === 'terminal:input') {
-          const { sessionId, data: inputData } = message as any;
-          const success = terminalService.writeToSession(sessionId, inputData);
-          if (!success) {
-            ws.send(JSON.stringify({
-              type: 'terminal:error',
-              sessionId,
-              error: 'Session not found',
-            }));
-          }
-        } else if (message.type === 'terminal:resize') {
-          const { sessionId, cols, rows } = message as any;
-          const success = terminalService.resizeSession(sessionId, cols, rows);
-          if (!success) {
-            ws.send(JSON.stringify({
-              type: 'terminal:error',
-              sessionId,
-              error: 'Session not found',
-            }));
-          }
-        } else if (message.type === 'terminal:kill') {
-          const { sessionId } = message as any;
-          const success = terminalService.killSession(sessionId);
-          clientSessions.get(ws)?.delete(sessionId);
+              // Stream PTY output → WebSocket
+              const unsub = terminalService.onOutput(sessionId, (data) => {
+                if (ws.readyState === WebSocket.OPEN) {
+                  ws.send(
+                    JSON.stringify({
+                      type: 'terminal:output',
+                      sessionId,
+                      data,
+                    })
+                  );
+                }
+              });
+              unsubscribers.set(sessionId, unsub);
 
-          if (success) {
-            ws.send(JSON.stringify({
-              type: 'terminal:killed',
-              sessionId,
-            }));
+              ws.send(
+                JSON.stringify({
+                  type: 'terminal:created',
+                  sessionId,
+                  pid: session.pty.pid,
+                })
+              );
+            } catch (error: any) {
+              ws.send(
+                JSON.stringify({
+                  type: 'terminal:error',
+                  sessionId,
+                  error: error.message,
+                })
+              );
+            }
+            break;
+          }
+
+          case 'terminal:input': {
+            const { sessionId, data: inputData } = message as any;
+            try {
+              terminalService.write(sessionId, inputData);
+            } catch (error: any) {
+              ws.send(
+                JSON.stringify({
+                  type: 'terminal:error',
+                  sessionId,
+                  error: error.message,
+                })
+              );
+            }
+            break;
+          }
+
+          case 'terminal:resize': {
+            const { sessionId, cols, rows } = message as any;
+            try {
+              terminalService.resize(sessionId, cols, rows);
+            } catch (error: any) {
+              ws.send(
+                JSON.stringify({
+                  type: 'terminal:error',
+                  sessionId,
+                  error: error.message,
+                })
+              );
+            }
+            break;
+          }
+
+          case 'terminal:kill': {
+            const { sessionId } = message as any;
+            try {
+              // Unsubscribe from output
+              unsubscribers.get(sessionId)?.();
+              unsubscribers.delete(sessionId);
+
+              // Kill the session
+              terminalService.kill(sessionId);
+              clientSessions.delete(sessionId);
+
+              ws.send(
+                JSON.stringify({
+                  type: 'terminal:killed',
+                  sessionId,
+                })
+              );
+            } catch (error: any) {
+              ws.send(
+                JSON.stringify({
+                  type: 'terminal:error',
+                  sessionId,
+                  error: error.message,
+                })
+              );
+            }
+            break;
           }
         }
       } catch (error) {
@@ -96,14 +148,13 @@ export function initWebSocketServer(server: Server): void {
     ws.on('close', () => {
       console.log('WebSocket client disconnected');
 
-      // Kill all terminal sessions for this client
-      const sessions = clientSessions.get(ws);
-      if (sessions) {
-        sessions.forEach((sessionId) => {
-          terminalService.killSession(sessionId);
-        });
-        clientSessions.delete(ws);
+      // Clean up all sessions for this client
+      for (const sessionId of clientSessions) {
+        unsubscribers.get(sessionId)?.();
+        terminalService.kill(sessionId);
       }
+      clientSessions.clear();
+      unsubscribers.clear();
 
       clients.delete(ws);
     });
@@ -111,14 +162,13 @@ export function initWebSocketServer(server: Server): void {
     ws.on('error', (error: Error) => {
       console.error('WebSocket error:', error);
 
-      // Kill all terminal sessions for this client
-      const sessions = clientSessions.get(ws);
-      if (sessions) {
-        sessions.forEach((sessionId) => {
-          terminalService.killSession(sessionId);
-        });
-        clientSessions.delete(ws);
+      // Clean up all sessions for this client
+      for (const sessionId of clientSessions) {
+        unsubscribers.get(sessionId)?.();
+        terminalService.kill(sessionId);
       }
+      clientSessions.clear();
+      unsubscribers.clear();
 
       clients.delete(ws);
     });

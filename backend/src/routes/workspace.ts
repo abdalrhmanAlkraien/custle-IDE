@@ -3,7 +3,8 @@ import { buildTree } from '../services/fileService';
 import { startWatching, stopWatching } from '../services/watcherService';
 import { broadcast } from '../websocket/wsServer';
 import { setWorkspaceRoot } from './agent';
-import { initGit } from '../services/gitService';
+import { initGit, getWorkspaceGitStatus } from '../services/gitService';
+import { browseDirectory } from '../services/workspaceService';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -69,6 +70,9 @@ router.post('/open', async (req: Request, res: Response) => {
     // Build file tree
     const tree = await buildTree(absolutePath, absolutePath);
 
+    // Get git status for workspace
+    const git = await getWorkspaceGitStatus(absolutePath);
+
     // Start file watcher
     startWatching(absolutePath, broadcast);
 
@@ -76,6 +80,7 @@ router.post('/open', async (req: Request, res: Response) => {
       path: absolutePath,
       name,
       tree,
+      git,
     });
   } catch (error: any) {
     console.error('Error opening workspace:', error);
@@ -137,6 +142,33 @@ router.get('/tree', async (_req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Error building tree:', error);
     res.status(500).json({ error: error.message || 'Failed to build tree' });
+  }
+});
+
+/**
+ * GET /api/workspace/browse
+ * Browse directories for folder picker
+ * No path traversal restriction - intentional (user browsing their own machine)
+ */
+router.get('/browse', async (req: Request, res: Response) => {
+  try {
+    const { path: dirPath } = req.query;
+
+    const result = await browseDirectory(dirPath as string | undefined);
+
+    return res.json(result);
+  } catch (error: any) {
+    if (error.message === 'Path does not exist') {
+      return res.status(400).json({ error: 'Path does not exist' });
+    }
+    if (error.message === 'Not a directory') {
+      return res.status(400).json({ error: 'Not a directory' });
+    }
+    if (error.message === 'Permission denied') {
+      return res.status(403).json({ error: 'Permission denied' });
+    }
+    console.error('Error browsing directory:', error);
+    return res.status(500).json({ error: error.message || 'Failed to browse directory' });
   }
 });
 

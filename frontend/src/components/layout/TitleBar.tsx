@@ -3,6 +3,7 @@
 import React from 'react';
 import { useModelStore } from '@/store/modelStore';
 import { ModelConfigModal } from '../modals/ModelConfigModal';
+import MenuBar from '../titlebar/MenuBar';
 
 export function TitleBar(): JSX.Element {
   const { activeConfig, isConnected, isModalOpen, openModal, closeModal, setActiveConfig } = useModelStore();
@@ -17,20 +18,7 @@ export function TitleBar(): JSX.Element {
             <span className="text-[var(--text-0)] font-medium text-sm">NeuralIDE</span>
           </div>
 
-          <div className="flex items-center gap-1 text-xs text-[var(--text-1)]">
-            <button className="px-2 py-1 hover:bg-[var(--bg-3)] rounded transition-colors">
-              File
-            </button>
-            <button className="px-2 py-1 hover:bg-[var(--bg-3)] rounded transition-colors">
-              Edit
-            </button>
-            <button className="px-2 py-1 hover:bg-[var(--bg-3)] rounded transition-colors">
-              View
-            </button>
-            <button className="px-2 py-1 hover:bg-[var(--bg-3)] rounded transition-colors">
-              Help
-            </button>
-          </div>
+          <MenuBar />
         </div>
 
         {/* Center: Workspace Name (optional) */}

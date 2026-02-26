@@ -31,6 +31,7 @@ export function MonacoEditor() {
   const updateCursor = useIDEStore((state) => state.updateCursor);
   const markTabClean = useIDEStore((state) => state.markTabClean);
   const closeTab = useIDEStore((state) => state.closeTab);
+  const setMonacoEditor = useIDEStore((state) => state.setMonacoEditor);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -59,6 +60,7 @@ export function MonacoEditor() {
   const handleEditorMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco.editor;
+    setMonacoEditor(editor); // Store in IDE store for menu bar access
 
     // Define and set neural-dark theme
     monaco.editor.defineTheme('neural-dark', neuralDarkTheme);
